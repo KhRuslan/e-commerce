@@ -1,81 +1,93 @@
 <template>
-<div>
-    <div>
-      <input type="text" name="first" placeholder="Write your name">
-  <input type="text" name="last"  placeholder="Write your last name">
-  <input type="email" name="email" placeholder="Write your email">
-  <input type="password" name="password" placeholder="Write your password">
-  <button @click="createUser">Завершить регистрацию</button>   
-    </div>
   <div>
-    
-    <input type="email" name="auth_email" placeholder="Write your email">
-    <input type="password" name="auth_password" placeholder="Write your password"> 
-    <button @click="getAuth">Войти</button>
+    <div>
+      <input type="text" name="first" placeholder="Write your name" />
+      <input type="text" name="last" placeholder="Write your last name" />
+      <input type="email" name="email" placeholder="Write your email" />
+      <input
+        type="password"
+        name="password"
+        placeholder="Write your password"
+      />
+      <button @click="createUser">Завершить регистрацию</button>
+    </div>
+    <div>
+      <input
+        type="email"
+        name="auth_email"
+        value="a@example.com"
+        placeholder="Write your email"
+      />
+      <input
+        type="password"
+        name="auth_password"
+        value="123"
+        placeholder="Write your password"
+      />
+      <button @click="getAuth">Войти</button>
+    </div>
+    <p>{{ me_email }}</p>
+    <p>{{ me_id }}</p>
+    <button @click="user_me">click</button>
   </div>
-</div>
- 
-
-
-
- 
 </template>
 
 <script>
-import { provideClient, useMutation } from "@urql/vue";
-import { ref } from '@vue/reactivity';
+import { provideClient, useMutation, useQuery } from "@urql/vue";
+import { ref } from "@vue/reactivity";
+import axios from "axios";
 
 export default {
   setup() {
-    const access = useMutation(
-      `   
-mutation ($email: String!, $password: String!) {
-  auth_login(email: $email, password: $password, mode: json) {
-    access_token
-    expires
-    refresh_token
-  }
-}
-     `
-    );
-    const createCustomer = useMutation(
-      `
-     mutation ($firstName: String, $lastName: String, $email: String, $password: String){
-  create_users_item(data: {
-    first_name: $firstName,
-    last_name: $lastName,
-    email: $email,
-    password: $password,
-  	status: "active",
-    provider: "default",
-    role: "cf49ed74-e9df-451d-ae3a-9a77c07fcf7a" 
-  })
-}
-     `
-    );
-    function getAuth() {
-      const password = document.querySelector("input[name=auth_password]").value
-      const email = document.querySelector("input[name=auth_email]").value
-      const variables = { email: email, password: password }
-      access.executeMutation(variables).then((result) => {
-        localStorage.setItem("token", result.data.auth_login.access_token);
-        localStorage.setItem('auth1', "done")
+    const me_email = ref('') 
+    const me_id = ref('')
+
+    
+    async function user_me () {
+       const { data } = await axios.get("http://38.242.229.113:8055/users/me", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
+      console.log(data);
+      me_email.value = data.data.email
+      me_id.value = data.data.id
     }
-    function createUser() {
-        const first = document.querySelector("input[name=first]").value
-        const last = document.querySelector("input[name=last]").value
-        const email = document.querySelector("input[name=email]").value
-        const password = document.querySelector("input[name=password]").value
-        const variables = { firstName: first, lastName: last, email: email, password: password }
-        createCustomer.executeMutation(variables).then((result) => {
-          localStorage.setItem('auth', null)
-        })
-        
+
+
+    async function getAuth() {
+      const password = document.querySelector(
+        "input[name=auth_password]"
+      ).value;
+      const email = document.querySelector("input[name=auth_email]").value;
+      const data = { email: email, password: password };
+      const result = await axios.post(
+        "http://38.242.229.113:8055/auth/login",
+        data
+      );
+      localStorage.setItem("token", result.data.data.access_token);
+    }
+    async function createUser() {
+      const first = document.querySelector("input[name=first]").value;
+      const last = document.querySelector("input[name=last]").value;
+      const email = document.querySelector("input[name=email]").value;
+      const password = document.querySelector("input[name=password]").value;
+      const data = {
+        first_name: first,
+        last_name: last,
+        email: email,
+        password: password,
+      };
+      axios
+        .post("http://38.242.229.113:8055/users", data)
+        .then(alert("Успешно зарегистрировались"));
     }
     return {
       getAuth,
       createUser,
+      user_me,
+      me_email,
+      me_id
     };
   },
 };

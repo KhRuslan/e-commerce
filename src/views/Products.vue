@@ -11,6 +11,7 @@
           <p>{{ p.price }}</p>
           <button @click="addFav(p.id)">Добавить</button>
         </div>
+        
       </div>
     </div>
   </div>
@@ -18,10 +19,10 @@
 
 <script>
 import { useQuery, gql, useMutation } from "@urql/vue";
-import { ref, watch } from 'vue'
-import { makeOperation } from '@urql/core';
+import { ref } from 'vue'
 import { useRouter, useRoute } from "vue-router";
-import { onMounted } from '@vue/runtime-core';
+import axios from 'axios'
+
 
 
 export default {
@@ -29,8 +30,6 @@ export default {
     const search = ref(null);
     const router = useRouter();
     const route = useRoute();
-    const i = localStorage.getItem('error')
-    const auth_error = ref(null)
 
     const add = useMutation(
        `
@@ -45,31 +44,22 @@ export default {
 
     );
 
-    onMounted(() => {
-      result.executeQuery().then(result => {
-        if (result.error) {
-         localStorage.setItem("error", result.error._rawValue.message);
-        }
-      })
-    })
-
-    watch(auth_error, () => {
-      console.log(1);
-    })
-
+   
     const result = useQuery({
       query: gql`
-        query ($search: String) {
-          products(search: $search) {
-            id
-            title
-            price
-            spec
-          }
-        }
+        query($limit: Int = 10) {
+products(limit: $limit) {
+  id
+  title
+  price
+	description
+}
+}
       `,
       variables: { search },
     });
+
+
     function searchProducts() {
       result.executeQuery()
     }
@@ -80,19 +70,20 @@ export default {
     }
 
     async function addFav(id) {
+      const { data } = await axios.get("http://38.242.229.113:8055/users/me", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       const i = id
       const a = parseInt(i)
-      const u = "518c6ae4-9919-4f5c-a494-81a4c8e562a3"
+      const u = data.data.id
       const variables = { ProductId: a, UserId: u }
       add.executeMutation(variables).then((result) => {
         if (result.error) {
           console.error("Oh no!", result.error);
         }
       });
-    } 
-
-    function del() {
-      window.localStorage.clear()
     }
 
     return {
@@ -102,8 +93,7 @@ export default {
       error: result.error,
       searchProducts,
       move,
-      addFav,
-      del
+      addFav
     };
   },
 };
