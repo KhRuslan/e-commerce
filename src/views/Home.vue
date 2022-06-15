@@ -29,11 +29,11 @@
     <p>{{ me_email }}</p>
     <p>{{ me_id }}</p>
     <button @click="user_me">click</button>
+    <button @click="logOut">выйти</button>
   </div>
 </template>
 
 <script>
-import { provideClient, useMutation, useQuery } from "@urql/vue";
 import { ref } from "@vue/reactivity";
 import axios from "axios";
 
@@ -82,12 +82,16 @@ export default {
         .post("http://38.242.229.113:8055/users", data)
         .then(alert("Успешно зарегистрировались"));
     }
+    function logOut() {
+      localStorage.clear()
+    }
     return {
       getAuth,
       createUser,
       user_me,
       me_email,
-      me_id
+      me_id,
+      logOut
     };
   },
 };

@@ -19,7 +19,9 @@
 <script>
 import { useQuery } from "@urql/vue";
 import { useRouter, useRoute } from 'vue-router'
-let log = "lo"
+
+
+
 export default {
   setup() {
     const router = useRouter();
@@ -41,12 +43,16 @@ export default {
         }
       `, variables: { id },
     });
+
     return {
+      search,
       fetching: result.fetching,
       data: result.data,
       error: result.error,
-      route
-    }
+      searchProducts,
+      move,
+      addFav
+    };
   },
 };
 </script>

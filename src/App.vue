@@ -1,7 +1,8 @@
 <template>
   <div>
     <RouterLink to="/">Home</RouterLink> |
-    <RouterLink to="/products">Products</RouterLink>
+    <RouterLink to="/products">Products</RouterLink> |
+    <RouterLink to="/cart">Cart</RouterLink>
     <RouterView />
   </div>
 </template>
@@ -15,8 +16,7 @@ export default {
     const client = createClient({
       url: "http://38.242.229.113:8055/graphql",
       fetchOptions: () => {
-      let auth = 0
-      const token = auth == 0 ? localStorage.getItem('token') : null
+      const token = localStorage.getItem('token')
       return {
         headers: { authorization: token ? `Bearer ${token}` : '' }
       };
